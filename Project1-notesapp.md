@@ -249,7 +249,7 @@ This follows a GitOps-style repository structure.
 
 The k8s directory contains the Kubernetes configuration.
 
-**[View Kubernetes Files](https://github.com/NithinGowda46/Project1-notesapp-devops/tree/8ab7b8d33903a3cae2c33738e2fa64428ac1b4b4/k8s)**
+**[View Kubernetes Files](https://github.com/NithinGowda46/Project1-notesapp-devops/tree/8ab7b8d33903a3cae2c33738e2fa64428ac1b4b4/k8's)**
 
     k8s/
     ├── 1.config.yml
