@@ -31,7 +31,7 @@ Two separate GitHub repositories are used.
 
 ## Application Repository
 
-**[Project1-notesapp-application](https://github.com/NithinGowda46/Project1-notesapp-application.git-1)**
+**[Project1-notesapp-application](https://github.com/NithinGowda46/Project1-notesapp-application.git)**
 
 This repository contains:
 
@@ -75,9 +75,9 @@ This repository contains the Kubernetes manifests and Argo CD configuration.
 
 ## 🔗 Repository Resources
 
-- **[Application Repository](https://github.com/NithinGowda46/Project1-notesapp-application.git-1)** — React and Django application source code
+- **[Application Repository](https://github.com/NithinGowda46/Project1-notesapp-application.git)** — React and Django application source code
 - **[DevOps / GitOps Repository](https://github.com/NithinGowda46/Project1-notesapp-devops.git)** — Kubernetes manifests, Argo CD configuration, and Jenkinsfile
-- **[Kubernetes Files](https://github.com/NithinGowda46/Project1-notesapp-devops/tree/8ab7b8d33903a3cae2c33738e2fa64428ac1b4b4/k8s)** — Kubernetes deployment, service, ingress, HPA, VPA, and configuration files
+- **[Kubernetes Files](https://github.com/NithinGowda46/Project1-notesapp-devops/tree/8ab7b8d33903a3cae2c33738e2fa64428ac1b4b4/k8's)** — Kubernetes deployment, service, ingress, HPA, VPA, and configuration files
 - **[Argo CD Files](https://github.com/NithinGowda46/Project1-notesapp-devops/tree/8ab7b8d33903a3cae2c33738e2fa64428ac1b4b4/argocd)** — Argo CD AppProject and Application configuration
 
 ---
