@@ -116,7 +116,7 @@ The Django backend uses Gunicorn to serve the Django application through WSGI.
     COPY . .
     EXPOSE 8000
     CMD ["gunicorn", "<django_project>.wsgi:application", "--bind", "0.0.0.0:8000"]
-    #CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"] for normalt test
+    #CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"] for normal test
 
 ## Important
 
