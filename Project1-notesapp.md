@@ -521,7 +521,7 @@ The Jenkins pipeline is:
             stage('Clone Application') {
                 steps {
                     git branch: 'main',
-                        url: 'https://github.com/NithinGowda46/Project1-notesapp-application.git-1'
+                        url: 'https://github.com/NithinGowda46/Project1-notesapp-application.git'
                 }
             }
             stage('Docker Login') {
