@@ -4,7 +4,58 @@ A full-stack Notes Application built with React, Django, and MySQL, containerize
 
 ---
 
-# 1. Project Overview
+# 1. Pre-Installation
+
+Before starting the Jenkins CI/CD pipeline, make sure the required tools and services are installed and configured:
+
+* Git
+* Java 21
+* Docker
+* Jenkins
+* Kubernetes
+* Argo CD
+* GitHub
+* Docker Hub
+
+The Jenkins server must have permission to run Docker commands.
+
+## Jenkins Credentials
+
+Before running the Jenkins pipeline, configure these two credentials in Jenkins.
+
+### GitHub SSH Credential
+
+Create:
+
+    ID: github-ssh
+    Kind: SSH Username with private key
+    Username: git
+
+Generate an SSH key for the Jenkins user, add the public key to GitHub, and add the private key to the Jenkins credential.
+
+This credential is used to clone and push the GitOps repository:
+
+    git@github.com:NithinGowda46/Project1-notesapp-devops.git
+
+### Docker Hub Credential
+
+Create:
+
+    ID: dockerid
+    Kind: Username with password
+
+Use:
+
+    Username: Docker Hub username
+    Password: Docker Hub Access Token
+
+This credential is used by Jenkins to log in to Docker Hub and push the Django and React images.
+
+> **Reminder:** Make sure `github-ssh` and `dockerid` are created in Jenkins before running the pipeline.
+
+---
+
+# 2. Project Overview
 
 This project demonstrates an end-to-end CI/CD and GitOps workflow.
 
@@ -25,7 +76,7 @@ This project demonstrates an end-to-end CI/CD and GitOps workflow.
 
 ---
 
-# 2. Repository Structure
+# 3. Repository Structure
 
 Two separate GitHub repositories are used.
 
@@ -82,7 +133,7 @@ This repository contains the Kubernetes manifests and Argo CD configuration.
 
 ---
 
-# 3. Application Architecture
+# 4. Application Architecture
 
                          Notes Application
                                 │
@@ -103,9 +154,9 @@ Django runs using Gunicorn as the production WSGI server instead of Django’s d
 
 ---
 
-# 4. Docker Configuration
+# 5. Docker Configuration
 
-## 4.1 Django Dockerfile
+## 5.1 Django Dockerfile
 
 The Django backend uses Gunicorn to serve the Django application through WSGI.
 
@@ -154,7 +205,7 @@ then the command becomes:
 
 ---
 
-## 4.2 Django Requirements
+## 5.2 Django Requirements
 
 Make sure requirements.txt contains Gunicorn.
 
@@ -174,16 +225,16 @@ Jenkins does not need a separate Gunicorn installation because Gunicorn is insta
 
 ---
 
-## 4.3 React Dockerfile
+## 5.3 React Dockerfile
 
 The React frontend uses:
 
-    FROM node:22
-    WORKDIR /app/
-    COPY . /app/
-    RUN npm install
-    EXPOSE 3000
-    CMD ["npm", "start"]
+    FROM node:22  
+    WORKDIR /app  
+    COPY . /app/  
+    RUN npm install  
+    EXPOSE 3000  
+    CMD ["sh", "-c", "CHOKIDAR_USEPOLLING=true npm start"]
 
 ## React container
 
@@ -197,17 +248,17 @@ For a production deployment, React should ideally be built into static assets an
 
 ---
 
-# 5. Build Docker Images
+# 6. Build Docker Images
 
 The Django and React applications are built as separate Docker images.
 
-## 5.1 Build Django Image
+## 6.1 Build Django Image
 
 Run from the directory containing the Django Dockerfile:
 
     docker build --no-cache -t nithingowda46/notes-app:backend .
 
-## 5.2 Build React Image
+## 6.2 Build React Image
 
 Run from the main application directory:
 
@@ -215,7 +266,7 @@ Run from the main application directory:
 
 ---
 
-# 6. Push Docker Images to Docker Hub
+# 7. Push Docker Images to Docker Hub
 
 Login to Docker Hub:
 
@@ -233,7 +284,7 @@ These images are later used by Kubernetes.
 
 ---
 
-# 7. Kubernetes Repository
+# 8. Kubernetes Repository
 
 Create a separate repository:
 
@@ -245,7 +296,7 @@ This follows a GitOps-style repository structure.
 
 ---
 
-# 8. Kubernetes Manifests
+# 9. Kubernetes Manifests
 
 The k8s directory contains the Kubernetes configuration.
 
@@ -288,7 +339,7 @@ Therefore, the existing Django Service and Ingress configuration can continue to
 
 ---
 
-# 9. Namespace and Secrets
+# 10. Namespace and Secrets
 
 Sensitive Kubernetes configuration is kept separately:
 
@@ -316,7 +367,7 @@ Never commit real passwords, tokens, API keys, or other sensitive values to a pu
 
 ---
 
-# 10. Kubernetes Deployment Flow
+# 11. Kubernetes Deployment Flow
 
 The basic Kubernetes setup is:
 
@@ -350,7 +401,7 @@ instead of:
 
 ---
 
-# 11. Argo CD
+# 12. Argo CD
 
 Argo CD is used to implement the GitOps deployment process.
 
@@ -364,7 +415,7 @@ When Jenkins updates the Docker image version in the Kubernetes deployment files
 
 ---
 
-# 12. Argo CD AppProject
+# 13. Argo CD AppProject
 
 Create an Argo CD AppProject.
 
@@ -437,7 +488,7 @@ The Kubernetes namespace project-2 is a separate Kubernetes resource, even thoug
 
 ---
 
-# 13. Argo CD Application
+# 14. Argo CD Application
 
 Create an Argo CD Application:
 
@@ -482,7 +533,7 @@ and synchronize the Kubernetes resources.
 
 ---
 
-# 14. Jenkins CI/CD Pipeline
+# 15. Jenkins CI/CD Pipeline
 
 Jenkins is responsible for:
 
@@ -503,112 +554,111 @@ Gunicorn does not require any additional Jenkins stage because it is installed a
 
 ---
 
-# 15. Jenkinsfile
+# 16. Jenkinsfile
 
 The Jenkins pipeline is:
 
     pipeline {
-    agent any
+        agent any
 
-    stages {
+        stages {
 
-        stage('Clone Application') {
-            steps {
-                git branch: 'main',
-                    url: 'https://github.com/NithinGowda46/Project1-notesapp-application.git'
-            }
-        }
-
-        stage('Docker Login') {
-            steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerid',
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )
-                ]) {
-                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
-                }
-            }
-        }
-
-        stage('Build Django Image') {
-            steps {
-                sh 'docker build --no-cache -t nithingowda46/notes-app:${BUILD_NUMBER}-back .'
-            }
-        }
-
-        stage('Push Django Image') {
-            steps {
-                sh 'docker push nithingowda46/notes-app:${BUILD_NUMBER}-back'
-            }
-        }
-
-        stage('Build React Image') {
-            steps {
-                sh 'docker build --no-cache -t nithingowda46/notes-app:${BUILD_NUMBER}-front ./mynotes'
-            }
-        }
-
-        stage('Push React Image') {
-            steps {
-                sh 'docker push nithingowda46/notes-app:${BUILD_NUMBER}-front'
-            }
-        }
-
-        stage('Clone GitOps Repo') {
-            steps {
-                dir('gitops') {
+            stage('Clone Application') {
+                steps {
                     git branch: 'main',
-                        credentialsId: 'github-ssh',
-                        url: 'git@github.com:NithinGowda46/Project1-notesapp-devops.git'
+                        url: 'https://github.com/NithinGowda46/Project1-notesapp-application.git'
                 }
             }
-        }
 
-        stage('Update Django Image') {
-            steps {
-                dir('gitops') {
-                    sh 'sed -i "s|image: nithingowda46/notes-app:.*-back|image: nithingowda46/notes-app:${BUILD_NUMBER}-back|" "k8'\''s/3.django_deployment.yml"'
+            stage('Docker Login') {
+                steps {
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'dockerid',
+                            usernameVariable: 'DOCKER_USER',
+                            passwordVariable: 'DOCKER_PASS'
+                        )
+                    ]) {
+                        sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+                    }
                 }
             }
-        }
 
-        stage('Update React Image') {
-            steps {
-                dir('gitops') {
-                    sh 'sed -i "s|image: nithingowda46/notes-app:.*-front|image: nithingowda46/notes-app:${BUILD_NUMBER}-front|" "k8'\''s/5.react_deployment.yml"'
+            stage('Build Django Image') {
+                steps {
+                    sh 'docker build --no-cache -t nithingowda46/notes-app:${BUILD_NUMBER}-back .'
                 }
             }
-        }
 
-        stage('Git Commit') {
-            steps {
-                dir('gitops') {
-                    sh 'git add "k8'\''s/3.django_deployment.yml" "k8'\''s/5.react_deployment.yml" && git commit -m "Update backend and frontend images to build ${BUILD_NUMBER}" || echo "No changes to commit"'
+            stage('Push Django Image') {
+                steps {
+                    sh 'docker push nithingowda46/notes-app:${BUILD_NUMBER}-back'
                 }
             }
-        }
 
-        stage('Git Push') {
-            steps {
-                dir('gitops') {
-                    sh 'git push origin main'
+            stage('Build React Image') {
+                steps {
+                    sh 'docker build --no-cache -t nithingowda46/notes-app:${BUILD_NUMBER}-front ./mynotes'
+                }
+            }
+
+            stage('Push React Image') {
+                steps {
+                    sh 'docker push nithingowda46/notes-app:${BUILD_NUMBER}-front'
+                }
+            }
+
+            stage('Clone GitOps Repo') {
+                steps {
+                    dir('gitops') {
+                        git branch: 'main',
+                            credentialsId: 'github-ssh',
+                            url: 'git@github.com:NithinGowda46/Project1-notesapp-devops.git'
+                    }
+                }
+            }
+
+            stage('Update Django Image') {
+                steps {
+                    dir('gitops') {
+                        sh 'sed -i "s|image: nithingowda46/notes-app:.*-back|image: nithingowda46/notes-app:${BUILD_NUMBER}-back|" "k8'\''s/3.django_deployment.yml"'
+                    }
+                }
+            }
+
+            stage('Update React Image') {
+                steps {
+                    dir('gitops') {
+                        sh 'sed -i "s|image: nithingowda46/notes-app:.*-front|image: nithingowda46/notes-app:${BUILD_NUMBER}-front|" "k8'\''s/5.react_deployment.yml"'
+                    }
+                }
+            }
+
+            stage('Git Commit') {
+                steps {
+                    dir('gitops') {
+                        sh 'git add "k8'\''s/3.django_deployment.yml" "k8'\''s/5.react_deployment.yml" && git commit -m "Update backend and frontend images to build ${BUILD_NUMBER}" || echo "No changes to commit"'
+                    }
+                }
+            }
+
+            stage('Git Push') {
+                steps {
+                    dir('gitops') {
+                        sh 'git push origin main'
+                    }
                 }
             }
         }
     }
-    }
 
-
-Important: The sed -i commands use Linux syntax. This Jenkinsfile is therefore intended for a Linux Jenkins agent/server. On macOS, the sed syntax would use sed -i "".
+Important: The `sed -i` commands use Linux syntax. This Jenkinsfile is intended for a Linux Jenkins agent/server. On macOS, the `sed` syntax would use `sed -i ""`.
 
 No Jenkinsfile change is required specifically for Gunicorn.
 
 ---
 
-# 16. Docker Image Versioning
+# 17. Docker Image Versioning
 
 Jenkins uses the Jenkins BUILD_NUMBER to create unique Docker image tags.
 
@@ -631,7 +681,7 @@ This avoids relying on the latest tag and allows each Jenkins build to have a tr
 
 ---
 
-# 17. Complete CI/CD Flow
+# 18. Complete CI/CD Flow
 
                     Developer
                         │
@@ -693,7 +743,7 @@ This avoids relying on the latest tag and allows each Jenkins build to have a tr
 
 ---
 
-# 18. GitOps Deployment Flow
+# 19. GitOps Deployment Flow
 
 Argo CD follows the GitOps model.
 
@@ -726,7 +776,7 @@ Argo CD can automatically synchronize the desired state stored in Git with the K
 
 ---
 
-# 19. Verify Kubernetes Deployment
+# 20. Verify Kubernetes Deployment
 
 ## Check the Namespace
 
@@ -758,7 +808,7 @@ Argo CD can automatically synchronize the desired state stored in Git with the K
 
 ---
 
-# 20. Verify Argo CD
+# 21. Verify Argo CD
 
 ## Check the Argo CD Application
 
@@ -776,7 +826,7 @@ The Argo CD Application should eventually show the desired Git revision as synch
 
 ---
 
-# 21. Important Configuration Requirements
+# 22. Important Configuration Requirements
 
 Before running the Jenkins pipeline, make sure the Jenkins agent has:
 
@@ -784,6 +834,8 @@ Before running the Jenkins pipeline, make sure the Jenkins agent has:
 * Docker installed
 * Permission to execute Docker commands
 * Jenkins Docker Hub credentials configured
+* GitHub SSH credential configured as `github-ssh`
+* Docker Hub credential configured as `dockerid`
 * Permission to push to the GitOps GitHub repository
 
 The GitOps repository must contain the expected directory:
@@ -814,7 +866,7 @@ available through requirements.txt.
 
 ---
 
-# 22. Security Notes
+# 23. Security Notes
 
 Do not commit sensitive information such as:
 
@@ -824,6 +876,7 @@ Do not commit sensitive information such as:
 * AWS credentials
 * API keys
 * Kubernetes secret values
+* GitHub SSH private keys
 
 The Kubernetes secret files are kept outside Git using:
 
@@ -831,9 +884,11 @@ The Kubernetes secret files are kept outside Git using:
 
 Jenkins credentials should be stored using Jenkins Credentials Manager.
 
+The GitHub SSH private key must remain securely stored in Jenkins Credentials Manager and must never be committed to GitHub.
+
 ---
 
-# 23. Production Considerations
+# 24. Production Considerations
 
 This project is designed as a DevOps learning/portfolio project.
 
@@ -860,7 +915,7 @@ For a production deployment, consider:
 
 ---
 
-# 24. Final Architecture
+# 25. Final Architecture
 
                    ┌───────────────────────┐
                    │       Developer       │
@@ -920,7 +975,7 @@ For a production deployment, consider:
 
 ---
 
-# 25. Summary
+# 26. Summary
 
 This project implements a complete CI/CD and GitOps workflow:
 
