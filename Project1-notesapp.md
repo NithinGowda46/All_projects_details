@@ -508,126 +508,132 @@ Gunicorn does not require any additional Jenkins stage because it is installed a
 The Jenkins pipeline is:
 
     pipeline {
-        agent any
-        stages {
-            stage('Git Config') {
-                steps {
+    agent any
+
+    stages {
+
+        stage('Clone Application') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/NithinGowda46/Project1-notesapp-application.git'
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerid',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
                     sh '''
-                        git config --global user.name "Nithin Gowda"
-                        git config --global user.email "nithingowdai46@gmail.com"
+                        echo "$DOCKER_PASS" | docker login \
+                        -u "$DOCKER_USER" \
+                        --password-stdin
                     '''
                 }
             }
-            stage('Clone Application') {
-                steps {
+        }
+
+        stage('Build Django Image') {
+            steps {
+                sh '''
+                    docker build --no-cache \
+                    -t nithingowda46/notes-app:${BUILD_NUMBER}-back .
+                '''
+            }
+        }
+
+        stage('Push Django Image') {
+            steps {
+                sh '''
+                    docker push \
+                    nithingowda46/notes-app:${BUILD_NUMBER}-back
+                '''
+            }
+        }
+
+        stage('Build React Image') {
+            steps {
+                sh '''
+                    docker build --no-cache \
+                    -t nithingowda46/notes-app:${BUILD_NUMBER}-front ./mynotes
+                '''
+            }
+        }
+
+        stage('Push React Image') {
+            steps {
+                sh '''
+                    docker push \
+                    nithingowda46/notes-app:${BUILD_NUMBER}-front
+                '''
+            }
+        }
+
+        stage('Clone GitOps Repo') {
+            steps {
+                dir('gitops') {
                     git branch: 'main',
-                        url: 'https://github.com/NithinGowda46/Project1-notesapp-application.git'
+                        url: 'git@github.com:NithinGowda46/Project1-notesapp-devops.git'
                 }
             }
-            stage('Docker Login') {
-                steps {
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: 'dockerid',
-                            usernameVariable: 'DOCKER_USER',
-                            passwordVariable: 'DOCKER_PASS'
-                        )
-                    ]) {
-                        sh '''
-                            echo "$DOCKER_PASS" | docker login \
-                            -u "$DOCKER_USER" \
-                            --password-stdin
-                        '''
-                    }
-                }
-            }
-            stage('Build Django Image') {
-                steps {
+        }
+
+        stage('Update Django Image') {
+            steps {
+                dir('gitops') {
                     sh '''
-                        docker build --no-cache \
-                        -t nithingowda46/notes-app:${BUILD_NUMBER}-back .
+                        sed -i \
+                        "s|image: nithingowda46/notes-app:.*-back|image: nithingowda46/notes-app:${BUILD_NUMBER}-back|" \
+                        "k8's/3.django_deployment.yml"
                     '''
                 }
             }
-            stage('Push Django Image') {
-                steps {
+        }
+
+        stage('Update React Image') {
+            steps {
+                dir('gitops') {
                     sh '''
-                        docker push \
-                        nithingowda46/notes-app:${BUILD_NUMBER}-back
+                        sed -i \
+                        "s|image: nithingowda46/notes-app:.*-front|image: nithingowda46/notes-app:${BUILD_NUMBER}-front|" \
+                        "k8's/5.react_deployment.yml"
                     '''
                 }
             }
-            stage('Build React Image') {
-                steps {
+        }
+
+        stage('Git Commit') {
+            steps {
+                dir('gitops') {
                     sh '''
-                        docker build --no-cache \
-                        -t nithingowda46/notes-app:${BUILD_NUMBER}-front ./mynotes
+                        git add \
+                        "k8's/3.django_deployment.yml" \
+                        "k8's/5.react_deployment.yml"
+
+                        git commit \
+                        -m "Update backend and frontend images to build ${BUILD_NUMBER}" \
+                        || echo "No changes to commit"
                     '''
                 }
             }
-            stage('Push React Image') {
-                steps {
+        }
+
+        stage('Git Push') {
+            steps {
+                dir('gitops') {
                     sh '''
-                        docker push \
-                        nithingowda46/notes-app:${BUILD_NUMBER}-front
+                        git push origin main
                     '''
-                }
-            }
-            stage('Clone GitOps Repo') {
-                steps {
-                    dir('gitops') {
-                        git branch: 'main',
-                            url: 'https://github.com/NithinGowda46/Project1-notesapp-devops.git'
-                    }
-                }
-            }
-            stage('Update Django Image') {
-                steps {
-                    dir('gitops') {
-                        sh '''
-                            sed -i \
-                            "s|image: nithingowda46/notes-app:.*-back|image: nithingowda46/notes-app:${BUILD_NUMBER}-back|" \
-                            "k8s/3.django_deployment.yml"
-                        '''
-                    }
-                }
-            }
-            stage('Update React Image') {
-                steps {
-                    dir('gitops') {
-                        sh '''
-                            sed -i \
-                            "s|image: nithingowda46/notes-app:.*-front|image: nithingowda46/notes-app:${BUILD_NUMBER}-front|" \
-                            "k8s/5.react_deployment.yml"
-                        '''
-                    }
-                }
-            }
-            stage('Git Commit') {
-                steps {
-                    dir('gitops') {
-                        sh '''
-                            git add \
-                            "k8s/3.django_deployment.yml" \
-                            "k8s/5.react_deployment.yml"
-                            git commit \
-                            -m "Update backend and frontend images to build ${BUILD_NUMBER}" \
-                            || echo "No changes to commit"
-                        '''
-                    }
-                }
-            }
-            stage('Git Push') {
-                steps {
-                    dir('gitops') {
-                        sh '''
-                            git push origin main
-                        '''
                     }
                 }
             }
         }
     }
+
 
 Important: The sed -i commands use Linux syntax. This Jenkinsfile is therefore intended for a Linux Jenkins agent/server. On macOS, the sed syntax would use sed -i "".
 
