@@ -528,48 +528,32 @@ The Jenkins pipeline is:
                         passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
-                    sh '''
-                        echo "$DOCKER_PASS" | docker login \
-                        -u "$DOCKER_USER" \
-                        --password-stdin
-                    '''
+                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
                 }
             }
         }
 
         stage('Build Django Image') {
             steps {
-                sh '''
-                    docker build --no-cache \
-                    -t nithingowda46/notes-app:${BUILD_NUMBER}-back .
-                '''
+                sh 'docker build --no-cache -t nithingowda46/notes-app:${BUILD_NUMBER}-back .'
             }
         }
 
         stage('Push Django Image') {
             steps {
-                sh '''
-                    docker push \
-                    nithingowda46/notes-app:${BUILD_NUMBER}-back
-                '''
+                sh 'docker push nithingowda46/notes-app:${BUILD_NUMBER}-back'
             }
         }
 
         stage('Build React Image') {
             steps {
-                sh '''
-                    docker build --no-cache \
-                    -t nithingowda46/notes-app:${BUILD_NUMBER}-front ./mynotes
-                '''
+                sh 'docker build --no-cache -t nithingowda46/notes-app:${BUILD_NUMBER}-front ./mynotes'
             }
         }
 
         stage('Push React Image') {
             steps {
-                sh '''
-                    docker push \
-                    nithingowda46/notes-app:${BUILD_NUMBER}-front
-                '''
+                sh 'docker push nithingowda46/notes-app:${BUILD_NUMBER}-front'
             }
         }
 
@@ -577,6 +561,7 @@ The Jenkins pipeline is:
             steps {
                 dir('gitops') {
                     git branch: 'main',
+                        credentialsId: 'github-ssh',
                         url: 'git@github.com:NithinGowda46/Project1-notesapp-devops.git'
                 }
             }
@@ -585,11 +570,7 @@ The Jenkins pipeline is:
         stage('Update Django Image') {
             steps {
                 dir('gitops') {
-                    sh '''
-                        sed -i \
-                        "s|image: nithingowda46/notes-app:.*-back|image: nithingowda46/notes-app:${BUILD_NUMBER}-back|" \
-                        "k8's/3.django_deployment.yml"
-                    '''
+                    sh 'sed -i "s|image: nithingowda46/notes-app:.*-back|image: nithingowda46/notes-app:${BUILD_NUMBER}-back|" "k8'\''s/3.django_deployment.yml"'
                 }
             }
         }
@@ -597,11 +578,7 @@ The Jenkins pipeline is:
         stage('Update React Image') {
             steps {
                 dir('gitops') {
-                    sh '''
-                        sed -i \
-                        "s|image: nithingowda46/notes-app:.*-front|image: nithingowda46/notes-app:${BUILD_NUMBER}-front|" \
-                        "k8's/5.react_deployment.yml"
-                    '''
+                    sh 'sed -i "s|image: nithingowda46/notes-app:.*-front|image: nithingowda46/notes-app:${BUILD_NUMBER}-front|" "k8'\''s/5.react_deployment.yml"'
                 }
             }
         }
@@ -609,15 +586,7 @@ The Jenkins pipeline is:
         stage('Git Commit') {
             steps {
                 dir('gitops') {
-                    sh '''
-                        git add \
-                        "k8's/3.django_deployment.yml" \
-                        "k8's/5.react_deployment.yml"
-
-                        git commit \
-                        -m "Update backend and frontend images to build ${BUILD_NUMBER}" \
-                        || echo "No changes to commit"
-                    '''
+                    sh 'git add "k8'\''s/3.django_deployment.yml" "k8'\''s/5.react_deployment.yml" && git commit -m "Update backend and frontend images to build ${BUILD_NUMBER}" || echo "No changes to commit"'
                 }
             }
         }
@@ -625,13 +594,11 @@ The Jenkins pipeline is:
         stage('Git Push') {
             steps {
                 dir('gitops') {
-                    sh '''
-                        git push origin main
-                    '''
-                    }
+                    sh 'git push origin main'
                 }
             }
         }
+    }
     }
 
 
