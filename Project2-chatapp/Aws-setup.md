@@ -15,13 +15,20 @@ It contains separate public and private subnets for better security and organiza
 
 - **Region:** `ap-southeast-1` (Singapore)
 
-### VPC
-
-<img src="images/vpc.png" width="400">
-
-### Subnets
-
-<img src="images/subnets.png" width="400">
+<table>
+<tr>
+<th>VPC</th>
+<th>Subnets</th>
+</tr>
+<tr>
+<td>
+<img src="images/vpc.png" width="300">
+</td>
+<td>
+<img src="images/subnets.png" width="300">
+</td>
+</tr>
+</table>
 
 ---
 
