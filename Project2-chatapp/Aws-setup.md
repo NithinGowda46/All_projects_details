@@ -12,11 +12,11 @@ This project demonstrates the implementation of a complete DevOps environment on
 
 ## VPC
 
-![VPC](images/vpc.png)
+<img src="images/vpc.png" width="600">
 
 ## Subnets
 
-![VPC Subnets](images/subnets.png)
+<img src="images/subnets.png" width="600">
 
 ## Internet Gateway
 
@@ -26,9 +26,9 @@ This project demonstrates the implementation of a complete DevOps environment on
 
 ### Public Route Table
 
-![Public Route Table - Subnet Association](images/public-route-subnet-association.png)
+<img src="images/public-route-subnet-association.png" width="600">
 
-![Public Route Table - Routes](images/public-route-routes.png)
+<img src="images/public-route-routes.png" width="600">
 
 ### NAT Gateway
 
@@ -36,6 +36,6 @@ This project demonstrates the implementation of a complete DevOps environment on
 
 ### Private Route Table
 
-![Private Route Table - Subnet Association](images/private-route-subnet-association.png)
+<img src="images/private-route-subnet-association.png" width="600">
 
-![Private Route Table - Routes](images/private-route-routes.png)
+<img src="images/private-route-routes.png" width="600">
