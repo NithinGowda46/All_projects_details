@@ -84,6 +84,17 @@ A NAT Gateway provides outbound Internet connectivity for resources in private s
 
 ---
 
+## 1.4 AWS Client VPN
+
+The AWS Client VPN provides secure access from the local machine to resources inside the VPC.  
+It allows access to private resources using their private IP addresses.
+
+Refer to the following guide to create and configure the AWS Client VPN:
+
+[Refer to AWS Client VPN Setup Guide](https://github.com/NithinGowda46/installation_guide/blob/fc753c567fac7177054e2c977604a045ce3ff93d/8.AWS/vpn.md)
+
+---
+
 # 2. EC2 Instance Setup
 
 ## 2.1 CI Server
