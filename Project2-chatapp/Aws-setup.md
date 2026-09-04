@@ -1,185 +1,41 @@
-# DevOps Dev Environment Implementation
+# DevOps Project
 
-## 1. Infrastructure Setup
+This project demonstrates the implementation of a complete DevOps environment on AWS, including infrastructure, CI/CD, containerization, Kubernetes, monitoring, security, and application deployment.
 
-### 1.1 AWS Region
+---
+
+# 1. VPC Setup
+
+## AWS Region
 
 - **Region:** `ap-southeast-1` (Singapore)
 
-### 1.2 VPC
+## VPC
 
 ![VPC](images/vpc.png)
 
-### 1.3 Subnets
+## Subnets
 
 ![VPC Subnets](images/subnets.png)
 
-### 1.4 Route Tables
+## Internet Gateway
 
-_To be added._
+- Create an **Internet Gateway** and attach it to the VPC.
 
-### 1.5 Internet Gateway
+## Route Tables
 
-_To be added._
+### Public Route Table
 
-### 1.6 NAT Gateway
+![Public Route Table - Subnet Association](images/public-route-subnet-association.png)
 
-_To be added._
+![Public Route Table - Routes](images/public-route-routes.png)
 
-### 1.7 VPC Endpoints
+### NAT Gateway
 
-_To be added._
+- Create a **NAT Gateway** in a public subnet.
 
----
+### Private Route Table
 
-## 2. Server 1 — Jenkins / CI Server
+![Private Route Table - Subnet Association](images/private-route-subnet-association.png)
 
-### Purpose
-
-_To be added._
-
-### EC2 Configuration
-
-_To be added._
-
-### Installation
-
-_To be added._
-
-### Configuration
-
-_To be added._
-
----
-
-## 3. Server 2 — CD / Monitoring Server
-
-### Purpose
-
-_To be added._
-
-### EC2 Configuration
-
-_To be added._
-
-### Installation
-
-_To be added._
-
-### Configuration
-
-_To be added._
-
----
-
-## 4. EKS Cluster
-
-### Cluster Configuration
-
-_To be added._
-
-### Worker Nodes
-
-- Node 1
-- Node 2
-- Node 3
-
-### Kubernetes Configuration
-
-_To be added._
-
----
-
-## 5. Amazon RDS
-
-_To be added._
-
----
-
-## 6. Amazon ECR
-
-_To be added._
-
----
-
-## 7. AWS Secrets Manager
-
-_To be added._
-
----
-
-## 8. IAM Roles and Permissions
-
-_To be added._
-
----
-
-## 9. Application Deployment
-
-_To be added._
-
----
-
-## 10. Application Load Balancer / Ingress
-
-_To be added._
-
----
-
-## 11. CloudFront
-
-_To be added._
-
----
-
-## 12. AWS WAF
-
-_To be added._
-
----
-
-## 13. VPN Access
-
-_To be added._
-
----
-
-## 14. Monitoring
-
-### Prometheus
-
-_To be added._
-
-### Grafana
-
-_To be added._
-
----
-
-## 15. CI/CD Flow
-
-```text
-Developer
-    |
-    v
-Git Repository
-    |
-    v
-Jenkins
-    |
-    +--> Build
-    +--> Test
-    +--> SonarQube
-    +--> Trivy
-    |
-    v
-Amazon ECR
-    |
-    v
-Argo CD
-    |
-    v
-EKS
-    |
-    v
-Application
+![Private Route Table - Routes](images/private-route-routes.png)
