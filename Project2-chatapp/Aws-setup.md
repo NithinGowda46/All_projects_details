@@ -34,8 +34,8 @@ It contains separate public and private subnets for better security and organiza
 
 ## 1.2 Public Route Table
 
-The public route table allows resources in public subnets to communicate with the Internet.  
-An Internet Gateway is used as the Internet-facing route.
+The public route table provides Internet connectivity to resources deployed in public subnets.  
+An Internet Gateway is attached to the VPC for Internet access.
 
 ### Internet Gateway
 
@@ -60,8 +60,8 @@ An Internet Gateway is used as the Internet-facing route.
 
 ## 1.3 Private Route Table
 
-The private route table is used by resources that should not have direct Internet access.  
-A NAT Gateway provides controlled outbound Internet access for private resources.
+The private route table is used for resources that should not be directly accessible from the Internet.  
+A NAT Gateway provides outbound Internet connectivity for resources in private subnets.
 
 ### NAT Gateway
 
@@ -81,3 +81,45 @@ A NAT Gateway provides controlled outbound Internet access for private resources
 </td>
 </tr>
 </table>
+
+---
+
+# 2. EC2 Instance Setup
+
+## 2.1 CI Server
+
+The CI server is used for Jenkins and other CI/CD tools.  
+It is deployed in the private subnet for secure access.
+
+<img src="images/ci-server.png" width="350">
+
+### Configuration
+
+- **Name:** `CI-mainserver`
+- **Instance Type:** `m7i-flex.large`
+- **vCPU:** 2
+- **Memory:** 8 GB
+- **Subnet:** `1a_private_subnet`
+- **Public IPv4:** None
+- **Private IPv4:** `10.18.27.100`
+- **IMDSv2:** Required
+
+---
+
+## 2.2 CD Server
+
+The CD server is used for Argo CD, Prometheus, and Grafana.  
+It is deployed in the private subnet for secure access.
+
+<img src="images/cd-server.png" width="350">
+
+### Configuration
+
+- **Name:** `CD-mainserver`
+- **Instance Type:** `m7i-flex.large`
+- **vCPU:** 2
+- **Memory:** 8 GB
+- **Subnet:** `1b_private_subnet`
+- **Public IPv4:** None
+- **Private IPv4:** `10.18.35.188`
+- **IMDSv2:** Required
