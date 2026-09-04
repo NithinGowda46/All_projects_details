@@ -6,44 +6,48 @@ This project demonstrates the implementation of a complete DevOps environment on
 
 # 1. VPC Setup
 
-## AWS Region
+## 1.1 VPC
+
+### AWS Region
 
 - **Region:** `ap-southeast-1` (Singapore)
 
-## VPC
+### VPC
 
-<img src="images/vpc.png" width="450">
+<img src="images/vpc.png" width="400">
 
-## Subnets
+### Subnets
 
-<img src="images/subnets.png" width="450">
+<img src="images/subnets.png" width="400">
 
-## Internet Gateway
+---
+
+## 1.2 Public Route Table
+
+### Internet Gateway
 
 - Create an **Internet Gateway** and attach it to the VPC.
 
-## Route Tables
+### Subnet Association
 
-### Public Route Table
+<img src="images/public-route-subnet-association.png" width="350">
 
-**Subnet Association**
+### Routes
 
-<img src="images/public-route-subnet-association.png" width="400">
+<img src="images/public-route-routes.png" width="350">
 
-**Routes**
+---
 
-<img src="images/public-route-routes.png" width="400">
+## 1.3 Private Route Table
 
 ### NAT Gateway
 
 - Create a **NAT Gateway** in a public subnet.
 
-### Private Route Table
+### Subnet Association
 
-**Subnet Association**
+<img src="images/private-route-subnet-association.png" width="350">
 
-<img src="images/private-route-subnet-association.png" width="400">
+### Routes
 
-**Routes**
-
-<img src="images/private-route-routes.png" width="400">
+<img src="images/private-route-routes.png" width="350">
