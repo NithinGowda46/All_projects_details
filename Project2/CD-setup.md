@@ -118,7 +118,7 @@ The CD server is used for Continuous Deployment and deployment-related operation
 
 <img src="images/cd-server.png" width="350">
 
-## 3.2 Install Required Tools
+## 3.1 Install Required Tools
 
 ### AWS CLI
 
@@ -131,5 +131,19 @@ The CD server is used for Continuous Deployment and deployment-related operation
 ### Argo CD
 
 [Argo CD Installation Guide](https://github.com/NithinGowda46/installation_guide/blob/a05684a5e9f54c29c06bbf0135a8ac3900ef1c1f/5.agrocd/.installation_amazonlinux.md)
+
+---
+
+## 3.2 Configure EKS Access
+
+Configure the CD server to access the EKS cluster.
+
+### Configure kubeconfig
+
+```bash
+aws eks update-kubeconfig \
+  --region ap-southeast-1 \
+  --name chat-cluster
+```
 
 ---
