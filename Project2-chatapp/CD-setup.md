@@ -4,29 +4,7 @@ This section covers the resources required for Continuous Deployment and applica
 
 ---
 
-# 🔴 1. CD Server
-
-The CD server is used for Argo CD, Prometheus, and Grafana.  
-It is deployed in the private subnet for secure access.
-
-<img src="images/cd-server.png" width="350">
-
-### Configuration
-
-- **Name:** `CD-mainserver`
-- **Instance Type:** `m7i-flex.large`
-- **vCPU:** 2
-- **Memory:** 8 GB
-- **Subnet:** `1b_private_subnet`
-- **Public IPv4:** None
-- **Private IPv4:** `10.18.35.188`
-- **OS:** Amazon Linux 2023
-- **Architecture:** x86_64
-- **IMDSv2:** Required
-
----
-
-# 🔴 2. Amazon RDS
+# 🔴 1. Amazon RDS
 
 Amazon RDS is used as the managed PostgreSQL database for the application.  
 The database is deployed inside the VPC with private access.  
@@ -36,79 +14,49 @@ AWS Secrets Manager is used to manage the database credentials.
 
 ---
 
-# 🔴 3. Amazon EKS
+# 🔴 2. Amazon EKS
 
-Amazon EKS is used to deploy and manage the Kubernetes cluster for the application.  
-The EKS cluster is deployed inside the VPC using private subnets.
+Amazon EKS is used to run the application containers using Kubernetes.
 
-## 3.1 EKS Cluster Creation
+## 2.1 EKS Cluster Creation
 
-Create the EKS cluster with the required Kubernetes version, IAM roles, VPC, and private subnets.
+Create the EKS cluster with **EKS Auto Mode enabled**.
 
-<table>
-<tr>
-<th>EKS Cluster</th>
-<th>Cluster Configuration</th>
-</tr>
-<tr>
-<td>
-<img src="images/eks-cluster.png" width="300">
-</td>
-<td>
-<img src="images/eks-cluster-config.png" width="300">
-</td>
-</tr>
-</table>
+After reviewing the configuration, select **Create** to create the EKS cluster.
+
+> No separate node group is required because EKS Auto Mode automatically manages the cluster compute resources.
 
 ---
 
-## 3.2 EKS Node Group
+# 🔴 3. CD Server Setup
 
-Create a managed node group to provide worker nodes for running application workloads in the EKS cluster.
+The CD server is used for Continuous Deployment and deployment-related operations.
 
-<table>
-<tr>
-<th>Node Group Configuration</th>
-<th>Compute & Scaling</th>
-<th>Networking</th>
-</tr>
-<tr>
-<td>
-<img src="images/eks-node-group.png" width="280">
-</td>
-<td>
-<img src="images/eks-node-compute.png" width="280">
-</td>
-<td>
-<img src="images/eks-node-network.png" width="280">
-</td>
-</tr>
-</table>
+- **Name:** `CD-mainserver`
+- **Instance Type:** `m7i-flex.large`
+- **vCPU:** 2
+- **Memory:** 8 GB
+- **Subnet:** `1b_private_subnet`
+- **Private IP:** `10.18.35.188`
+- **Public IPv4:** None
+- **Operating System:** Amazon Linux 2023
+- **IMDSv2:** Required
 
-### Node Group Configuration
+<img src="images/cd-server.png" width="350">
 
-- **Node Group Name:** `node1`
-- **Node IAM Role:** `AmazonEKSAutoNodeRole`
-- **Capacity Type:** On-Demand
-- **Instance Type:** `c7i-flex.large`
-- **AMI:** Amazon Linux 2023
-- **Disk Size:** 20 GiB
-- **Desired Nodes:** 2
-- **Minimum Nodes:** 2
-- **Maximum Nodes:** 4
-- **Auto Scaling Group Warm Pool:** Disabled
-- **Node Auto Repair:** Disabled
-- **Remote Access:** Off
+## 3.2 Install Required Tools
 
----
+### AWS CLI
 
-## 3.3 Disable EKS Auto Mode
+[AWS CLI Installation Guide](#)
 
-After the managed node group is created, disable **EKS Auto Mode** so that only the manually configured node group is used.
+### kubectl
 
-- Go to **EKS → Cluster → Compute → Manage EKS Auto Mode**.
-- Turn off **Use EKS Auto Mode**.
-- Click **Save changes**.
-- The EC2 instances managed by EKS Auto Mode will be terminated.
+[kubectl Installation Guide](#)
+
+### Argo CD
+
+[Argo CD Installation Guide](#)
+
 
 ---
