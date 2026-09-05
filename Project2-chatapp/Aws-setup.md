@@ -1,10 +1,10 @@
-# DevOps Project
+<h1 style="color:red;">DevOps Project</h1>
 
 This project demonstrates the implementation of a complete DevOps environment on AWS, including CI/CD, containerization, Kubernetes, monitoring, security, and application deployment.
 
 ---
 
-# 1. VPC Setup
+<h1 style="color:red;">1. VPC Setup</h1>
 
 ## 1.1 VPC
 
@@ -93,7 +93,7 @@ It allows access to private resources using their private IP addresses.
 
 ---
 
-# 2. EC2 Instance Setup
+<h1 style="color:red;">2. EC2 Instance Setup</h1>
 
 ## 2.1 CI Server
 
@@ -139,7 +139,7 @@ It is deployed in the private subnet for secure access.
 
 ---
 
-# 3. CI Server Setup
+<h1 style="color:red;">3. CI Server Setup</h1>
 
 ## 3.1 Login to CI Server
 
@@ -182,7 +182,7 @@ sudo -u jenkins docker ps
 
 ---
 
-# 4. Amazon ECR
+<h1 style="color:red;">4. Amazon ECR</h1>
 
 Amazon ECR is used to store and manage the Docker images built by Jenkins.  
 Separate private repositories are created for the frontend and backend applications.
@@ -205,7 +205,7 @@ The `AmazonEC2ContainerRegistryPowerUser` policy allows Jenkins to push Docker i
 
 ---
 
-# 5. Docker Configuration
+<h1 style="color:red;">5. Docker Configuration</h1>
 
 ## 5.1 Dockerfiles
 
@@ -252,7 +252,7 @@ CMD ["npm", "start"]
 
 ---
 
-# 6. Jenkins CI Pipeline
+<h1 style="color:red;">6. Jenkins CI Pipeline</h1>
 
 The Jenkins pipeline clones the application, builds the frontend and backend Docker images, and pushes them to Amazon ECR.
 
@@ -342,7 +342,7 @@ pipeline {
 
 ---
 
-# 7. CI Build Result
+<h1 style="color:red;">7. CI Build Result</h1>
 
 The Jenkins pipeline successfully builds the frontend and backend Docker images and pushes them to their respective Amazon ECR repositories.
 
@@ -350,7 +350,7 @@ The Jenkins pipeline successfully builds the frontend and backend Docker images 
 
 ---
 
-# 8. Amazon RDS
+<h1 style="color:red;">8. Amazon RDS</h1>
 
 Amazon RDS is used as the managed PostgreSQL database for the application.  
 The database is deployed inside the VPC with private access.  
@@ -360,7 +360,7 @@ AWS Secrets Manager is used to manage the database credentials.
 
 ---
 
-# 9. Amazon EKS
+<h1 style="color:red;">9. Amazon EKS</h1>
 
 Amazon EKS is used to deploy and manage the Kubernetes cluster for the application.  
 The EKS cluster is deployed inside the VPC using private subnets.
