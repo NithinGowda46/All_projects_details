@@ -89,8 +89,6 @@ A NAT Gateway provides outbound Internet connectivity for resources in private s
 The AWS Client VPN provides secure access from the local machine to resources inside the VPC.  
 It allows access to private resources using their private IP addresses.
 
-Refer to the following guide to create and configure the AWS Client VPN:
-
 [Refer to AWS Client VPN Setup Guide](https://github.com/NithinGowda46/installation_guide/blob/fc753c567fac7177054e2c977604a045ce3ff93d/8.AWS/vpn.md)
 
 ---
@@ -113,6 +111,8 @@ It is deployed in the private subnet for secure access.
 - **Subnet:** `1a_private_subnet`
 - **Public IPv4:** None
 - **Private IPv4:** `10.18.27.100`
+- **OS:** Amazon Linux 2023
+- **Architecture:** x86_64
 - **IMDSv2:** Required
 
 ---
@@ -133,4 +133,100 @@ It is deployed in the private subnet for secure access.
 - **Subnet:** `1b_private_subnet`
 - **Public IPv4:** None
 - **Private IPv4:** `10.18.35.188`
+- **OS:** Amazon Linux 2023
+- **Architecture:** x86_64
 - **IMDSv2:** Required
+
+---
+
+# 3. CI Server Setup
+
+## 3.1 Login to CI Server
+
+Connect to the CI server using SSH through the AWS Client VPN.
+
+## 3.2 Install Required Tools
+
+### Git
+
+[Git Installation Guide](#)
+
+### Jenkins
+
+[Jenkins Installation Guide](#)
+
+### AWS CLI
+
+[AWS CLI Installation Guide](#)
+
+### Docker
+
+[Docker Installation Guide](#)
+
+---
+
+# 4. Amazon ECR
+
+Amazon ECR is used to store the Docker images built by Jenkins.
+
+## 4.1 ECR Repositories
+
+<img src="images/ecr.png" width="700">
+
+---
+
+## 4.2 IAM Role for ECR
+
+An IAM role is attached to the CI server to provide access to Amazon ECR.  
+The `AmazonEC2ContainerRegistryPowerUser` policy allows Jenkins to push Docker images to ECR.
+
+<img src="images/ci-ecr-iam-role.png" width="700">
+
+---
+
+# 5. Docker Configuration
+
+## 5.1 Dockerfiles
+
+Create separate Dockerfiles for the frontend and backend applications.
+
+### Frontend Dockerfile
+
+```dockerfile
+FROM node:18-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+### Backend Dockerfile
+
+```dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+COPY . .
+
+EXPOSE 5001
+
+CMD ["npm", "start"]
+```
+
+---
