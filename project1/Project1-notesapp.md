@@ -17,6 +17,7 @@ Before starting the Jenkins CI/CD pipeline, make sure the required tools and ser
 * GitHub
 * Docker Hub
 
+
 The Jenkins server must have permission to run Docker commands.
 
 ## Jenkins Credentials
