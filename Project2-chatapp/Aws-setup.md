@@ -165,13 +165,31 @@ Connect to the CI server using SSH through the AWS Client VPN.
 
 ---
 
+## 3.3 Configure Jenkins for Docker
+
+Add the `jenkins` user to the Docker group so Jenkins can execute Docker commands without `sudo`.
+
+```bash
+sudo usermod -aG docker jenkins
+sudo systemctl restart jenkins
+```
+
+Verify Docker access:
+
+```bash
+sudo -u jenkins docker ps
+```
+
+---
+
 # 4. Amazon ECR
 
-Amazon ECR is used to store the Docker images built by Jenkins.
+Amazon ECR is used to store and manage the Docker images built by Jenkins.  
+Separate private repositories are created for the frontend and backend applications.
 
 ## 4.1 ECR Repositories
 
-<img src="images/ecr.png" width="700">
+<img src="images/ecr.png" width="350">
 
 ---
 
@@ -228,5 +246,103 @@ EXPOSE 5001
 
 CMD ["npm", "start"]
 ```
+
+---
+
+# 6. Jenkins CI Pipeline
+
+The Jenkins pipeline clones the application, builds the frontend and backend Docker images, and pushes them to Amazon ECR.
+
+```groovy
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Clone Application') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/NithinGowda46/Project2-chatapp-CI.git'
+            }
+        }
+
+        stage('Build Backend Image') {
+            steps {
+                sh '''
+                    docker build --no-cache \
+                    -t chat-app-backend:${BUILD_NUMBER} \
+                    ./backend
+                '''
+            }
+        }
+
+        stage('Build Frontend Image') {
+            steps {
+                sh '''
+                    docker build --no-cache \
+                    -t chat-app-frontend:${BUILD_NUMBER} \
+                    ./frontend
+                '''
+            }
+        }
+
+        stage('ECR Login') {
+            steps {
+                sh '''
+                    aws ecr get-login-password --region ap-southeast-1 | \
+                    docker login --username AWS --password-stdin \
+                    236209348145.dkr.ecr.ap-southeast-1.amazonaws.com
+                '''
+            }
+        }
+
+        stage('Tag Backend Image') {
+            steps {
+                sh '''
+                    docker tag \
+                    chat-app-backend:${BUILD_NUMBER} \
+                    236209348145.dkr.ecr.ap-southeast-1.amazonaws.com/chat-app-backend:${BUILD_NUMBER}
+                '''
+            }
+        }
+
+        stage('Push Backend Image') {
+            steps {
+                sh '''
+                    docker push \
+                    236209348145.dkr.ecr.ap-southeast-1.amazonaws.com/chat-app-backend:${BUILD_NUMBER}
+                '''
+            }
+        }
+
+        stage('Tag Frontend Image') {
+            steps {
+                sh '''
+                    docker tag \
+                    chat-app-frontend:${BUILD_NUMBER} \
+                    236209348145.dkr.ecr.ap-southeast-1.amazonaws.com/chat-app-frontend:${BUILD_NUMBER}
+                '''
+            }
+        }
+
+        stage('Push Frontend Image') {
+            steps {
+                sh '''
+                    docker push \
+                    236209348145.dkr.ecr.ap-southeast-1.amazonaws.com/chat-app-frontend:${BUILD_NUMBER}
+                '''
+            }
+        }
+    }
+}
+```
+
+---
+
+# 7. CI Build Result
+
+The Jenkins pipeline successfully builds the frontend and backend Docker images and pushes them to their respective Amazon ECR repositories.
+
+<img src="images/jenkins-build.png" width="350">
 
 ---
