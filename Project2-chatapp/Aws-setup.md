@@ -189,6 +189,9 @@ Separate private repositories are created for the frontend and backend applicati
 
 ## 4.1 ECR Repositories
 
+Amazon ECR is used to store and manage the Docker images built by Jenkins.  
+Separate private repositories are created for the frontend and backend applications.
+
 <img src="images/ecr.png" width="350">
 
 ---
@@ -198,7 +201,7 @@ Separate private repositories are created for the frontend and backend applicati
 An IAM role is attached to the CI server to provide access to Amazon ECR.  
 The `AmazonEC2ContainerRegistryPowerUser` policy allows Jenkins to push Docker images to ECR.
 
-<img src="images/ci-ecr-iam-role.png" width="700">
+<img src="images/ci-ecr-iam-role.png" width="350">
 
 ---
 
@@ -343,6 +346,93 @@ pipeline {
 
 The Jenkins pipeline successfully builds the frontend and backend Docker images and pushes them to their respective Amazon ECR repositories.
 
-<img src="images/jenkins-build.png" width="350">
+<img src="images/CI-jenkins-build.png" width="350">
+
+---
+
+# 8. Amazon RDS
+
+Amazon RDS is used as the managed PostgreSQL database for the application.  
+The database is deployed inside the VPC with private access.  
+AWS Secrets Manager is used to manage the database credentials.
+
+<img src="images/rds.png" width="500">
+
+---
+
+# 9. Amazon EKS
+
+Amazon EKS is used to deploy and manage the Kubernetes cluster for the application.  
+The EKS cluster is deployed inside the VPC using private subnets.
+
+## 9.1 EKS Cluster Creation
+
+Create the EKS cluster with the required Kubernetes version, IAM roles, VPC, and private subnets.
+
+<table>
+<tr>
+<th>EKS Cluster</th>
+<th>Cluster Configuration</th>
+</tr>
+<tr>
+<td>
+<img src="images/eks-cluster.png" width="300">
+</td>
+<td>
+<img src="images/eks-cluster-config.png" width="300">
+</td>
+</tr>
+</table>
+
+---
+
+## 9.2 EKS Node Group
+
+Create a managed node group to provide worker nodes for running application workloads in the EKS cluster.
+
+<table>
+<tr>
+<th>Node Group Configuration</th>
+<th>Compute & Scaling</th>
+<th>Networking</th>
+</tr>
+<tr>
+<td>
+<img src="images/eks-node-group.png" width="280">
+</td>
+<td>
+<img src="images/eks-node-compute.png" width="280">
+</td>
+<td>
+<img src="images/eks-node-network.png" width="280">
+</td>
+</tr>
+</table>
+
+### Node Group Configuration
+
+- **Node Group Name:** `node1`
+- **Node IAM Role:** `AmazonEKSAutoNodeRole`
+- **Capacity Type:** On-Demand
+- **Instance Type:** `c7i-flex.large`
+- **AMI:** Amazon Linux 2023
+- **Disk Size:** 20 GiB
+- **Desired Nodes:** 2
+- **Minimum Nodes:** 2
+- **Maximum Nodes:** 4
+- **Auto Scaling Group Warm Pool:** Disabled
+- **Node Auto Repair:** Disabled
+- **Remote Access:** Off
+
+---
+
+## 9.3 Disable EKS Auto Mode
+
+After the managed node group is created, disable **EKS Auto Mode** so that only the manually configured node group is used.
+
+- Go to **EKS → Cluster → Compute → Manage EKS Auto Mode**.
+- Turn off **Use EKS Auto Mode**.
+- Click **Save changes**.
+- The EC2 instances managed by EKS Auto Mode will be terminated.
 
 ---
