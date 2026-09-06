@@ -255,3 +255,5 @@ Therefore, AWS access keys or secret keys are **not required inside the Kubernet
    └── chatapp/backend-sa → IAM Role
 
 --------------------------------------------------------------------
+
+
