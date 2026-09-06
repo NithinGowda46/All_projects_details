@@ -346,3 +346,50 @@ mongosh \
 When prompted, enter the DocumentDB password.
 
 A successful connection confirms that the CD server can reach the private Amazon DocumentDB cluster.
+
+---
+
+# 🔴 4. Deployment Files
+
+The deployment files required for deploying the Chat Application on Amazon EKS are maintained in the GitHub CD repository.
+
+---
+
+## 4.1 Kubernetes Deployment Files
+
+The Kubernetes manifests are available in the following directory:
+
+[Kubernetes Manifests](https://github.com/NithinGowda46/Project2-chatapp-CD/tree/main/k8s)
+
+The directory contains the following Kubernetes manifests:
+
+- [`namespace.yaml`](https://github.com/NithinGowda46/Project2-chatapp-CD/blob/main/k8s/namespace.yaml) — Namespace
+- [`serviceaccount.yaml`](https://github.com/NithinGowda46/Project2-chatapp-CD/blob/main/k8s/serviceaccount.yaml) — Backend ServiceAccount
+- [`backend_deployment.yaml`](https://github.com/NithinGowda46/Project2-chatapp-CD/blob/main/k8s/backend_deployment.yaml) — Backend Deployment
+- [`backend_service.yaml`](https://github.com/NithinGowda46/Project2-chatapp-CD/blob/main/k8s/backend_service.yaml) — Backend Service
+- [`frontend_deployment.yaml`](https://github.com/NithinGowda46/Project2-chatapp-CD/blob/main/k8s/frontend_deployment.yaml) — Frontend Deployment
+- [`frontend_service.yaml`](https://github.com/NithinGowda46/Project2-chatapp-CD/blob/main/k8s/frontend_service.yaml) — Frontend Service
+- [`sectes.yaml`](https://github.com/NithinGowda46/Project2-chatapp-CD/blob/main/k8s/sectes.yaml) — SecretProviderClass and secret configuration
+- [`hpa.yaml`](https://github.com/NithinGowda46/Project2-chatapp-CD/blob/main/k8s/hpa.yaml) — Horizontal Pod Autoscaler
+- [`ingressclass.yaml`](https://github.com/NithinGowda46/Project2-chatapp-CD/blob/main/k8s/ingressclass.yaml) — AWS ALB IngressClass
+- [`ingress.yaml`](https://github.com/NithinGowda46/Project2-chatapp-CD/blob/main/k8s/ingress.yaml) — Application Load Balancer Ingress
+
+Detailed explanations of the Kubernetes manifest files are available in the following directory:
+
+[Kubernetes Manifest Explanations](https://github.com/NithinGowda46/All_projects_details/tree/main/Project2/k8s_explain)
+
+---
+
+## 4.2 Argo CD Deployment Files
+
+Argo CD is used for Continuous Deployment and follows the GitOps approach.
+
+The Argo CD configuration files are available in the following directory:
+
+[Argo CD Configuration](https://github.com/NithinGowda46/Project2-chatapp-CD/tree/main/argocd)
+
+The directory contains the following configuration files:
+
+- `project.yaml` — Argo CD Project configuration
+- `application.yaml` — Argo CD Application configuration
+
