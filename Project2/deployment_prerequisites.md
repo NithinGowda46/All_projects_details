@@ -22,11 +22,39 @@ Add the following add-ons:
 
 Install the **Secrets Store CSI Driver** on the EKS cluster.
 
+The CSI Driver is a **cluster-level component** and runs in the `kube-system` namespace. It is not installed in the application namespace `chatapp`.
+
 Run from the CD server:
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/v1.6.0/deploy/secrets-store-csi-driver.yaml
 ```
+
+The CSI Driver provides the Kubernetes integration required to mount secrets from external secret providers.
+
+In this project, the **AWS Secrets and Configuration Provider (ASCP)** is installed separately as an **EKS add-on** and works together with the Secrets Store CSI Driver to retrieve secrets from AWS Secrets Manager.
+
+The application-specific `SecretProviderClass` is created in the `chatapp` namespace and uses the CSI Driver to retrieve the required secrets.
+
+The architecture is:
+
+```text
+EKS Cluster
+    │
+    ├── kube-system
+    │      └── Secrets Store CSI Driver
+    │
+    └── chatapp
+           └── SecretProviderClass
+                  ↓
+                ASCP
+                  ↓
+          AWS Secrets Manager
+```
+
+For this project, **do not install ASCP again using Helm or the AWS provider YAML**, because ASCP is already installed as an EKS add-on.
+
+The additional RBAC required for synchronizing the mounted secret into a Kubernetes Secret is configured separately in the next section.
 ---
 
 ## 3. Secret Synchronization RBAC
@@ -114,3 +142,116 @@ env:
 ```
 
 The actual secret values must **not** be stored in GitHub.
+
+---
+
+## 4. Configure EKS Pod Identity Association
+
+Create the EKS Pod Identity association from the AWS Console.
+
+Go to:
+
+**AWS Console → EKS → Clusters → `chat-cluster` → Access → Pod Identity associations → Create**
+
+Configure the following:
+
+```text
+Namespace:        chatapp
+Service account:  backend-sa
+IAM role:         ChatAppBackendSecretsRole
+```
+
+### ServiceAccount
+
+The backend uses the following Kubernetes ServiceAccount:
+
+```text
+backend-sa
+```
+
+It is defined in:
+
+```text
+k8s/serviceaccount.yaml
+```
+
+The backend Deployment uses this ServiceAccount:
+
+```yaml
+spec:
+  serviceAccountName: backend-sa
+```
+
+### IAM Role
+
+The IAM role associated with `backend-sa` is:
+
+```text
+ChatAppBackendSecretsRole
+```
+
+This IAM role must have permission to read the required secret from AWS Secrets Manager.
+
+The required AWS Secrets Manager secret is:
+
+```text
+chatapp/backend
+```
+
+The secret contains:
+
+```text
+MONGODB_URI
+JWT_SECRET
+```
+
+The actual secret values must **not** be stored in GitHub.
+
+### Pod Identity Flow
+
+```text
+Backend Pod
+      ↓
+backend-sa
+      ↓
+EKS Pod Identity Association
+      ↓
+EKS Pod Identity Agent
+      ↓
+ChatAppBackendSecretsRole
+      ↓
+secretsmanager:GetSecretValue
+      ↓
+AWS Secrets Manager
+      ↓
+chatapp/backend
+```
+
+The backend `SecretProviderClass` uses EKS Pod Identity with:
+
+```yaml
+parameters:
+  usePodIdentity: "true"
+```
+
+This allows the AWS Secrets Manager provider to use the temporary credentials provided through EKS Pod Identity.
+
+Therefore, AWS access keys or secret keys are **not required inside the Kubernetes Deployment**.
+
+-----------------------------------------------------------------
+
+1. EKS Add-ons
+   ├── Metrics Server
+   ├── ASCP
+   └── Pod Identity Agent
+
+2. Secrets Store CSI Driver
+   └── kube-system
+
+3. Secret Synchronization RBAC
+   └── cluster-level RBAC
+
+4. Pod Identity Association
+   └── chatapp/backend-sa → IAM Role
+
+--------------------------------------------------------------------
