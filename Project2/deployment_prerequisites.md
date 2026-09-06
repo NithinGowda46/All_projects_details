@@ -131,15 +131,11 @@ kubectl top pods -n chatapp
 
 If metrics are unavailable, install/configure a compatible metrics provider before relying on the HPA.
 
-The current HPA configuration scales the backend based on CPU and memory utilization.
-
 ---
 
 ## 7. Verify EKS ALB Readiness
 
 EKS Auto Mode provides the AWS load-balancing capability required by the application's ALB Ingress.
-
-Verify that the cluster is ready to provision an ALB and that the public subnet tags are correct.
 
 The application Ingress is configured as:
 
@@ -245,21 +241,7 @@ After `CI-setup.md` and `CD-setup.md` are complete, follow this order:
         ↓
 4. Configure EKS Pod Identity association
         ↓
-5. Verify AWS Secrets Manager access
-        ↓
-6. Verify HPA metrics
-        ↓
-7. Verify ALB readiness
-        ↓
-8. Verify GitHub CD repository
-        ↓
-9. Apply Argo CD project.yaml
-        ↓
-10. Apply Argo CD application.yaml
-        ↓
-11. Argo CD synchronizes the k8s/ directory
-        ↓
-12. Verify Chat Application
+5. Argo CD deployment
 ```
 
 Once these additional prerequisites are complete, proceed with the **Argo CD deployment**.
