@@ -1,16 +1,168 @@
-# 🔴 CD Setup
+# 🔴 1. Amazon DocumentDB
 
-This section covers the resources required for Continuous Deployment and application deployment.
+Amazon DocumentDB is used as the managed MongoDB-compatible database for the application.
+
+The database is deployed privately inside the VPC, and AWS Secrets Manager is used to securely store the application secrets.
+
+<img src="images/documentdb.png" width="500">
 
 ---
 
-# 🔴 1. Amazon RDS
+## 1.1 Create DocumentDB Subnet Group
 
-Amazon RDS is used as the managed PostgreSQL database for the application.  
-The database is deployed inside the VPC with private access.  
-AWS Secrets Manager is used to manage the database credentials.
+Before creating the Amazon DocumentDB cluster, create a **DB subnet group**.
 
-<img src="images/rds.png" width="500">
+Go to:
+
+**AWS Console → DocumentDB → Subnet groups → Create**
+
+### Subnet Group Configuration
+
+- **Name:** `private-db-group`
+- **Description:** `Private subnet group for ChatApp DocumentDB`
+- **VPC:** Select the VPC used by the EKS cluster
+
+<img src="images/documentdb-subnet-group.png" width="500">
+
+---
+
+## 1.2 Create DocumentDB Security Group
+
+Create a dedicated security group for DocumentDB.
+
+### Security Group
+
+- **Name:** `chatapp-documentdb-sg`
+- **VPC:** Same VPC as EKS
+
+### Inbound Rule
+
+```text
+Type:        Custom TCP
+Port:        27017
+Source:      EKS security group
+```
+
+Do not allow:
+
+```text
+0.0.0.0/0
+```
+
+<img src="images/documentdb-security-group.png" width="500">
+
+---
+
+## 1.3 Create DocumentDB Cluster
+
+Go to:
+
+**AWS Console → DocumentDB → Clusters → Create**
+
+### Cluster Configuration
+
+- **Cluster type:** Instance-based cluster
+- **Cluster identifier:** `chat-app-db`
+- **Engine:** Amazon DocumentDB
+- **Engine version:** Select the available compatible version
+- **Instance class:** `db.t3.medium`
+- **Number of instances:** `1`
+
+### Connectivity
+
+- **Network type:** IPv4
+- **VPC:** Select the same VPC used by EKS
+- **Subnet group:** `private-db-group`
+- **VPC security group:** `chatapp-documentdb-sg`
+- **Publicly accessible:** No
+
+### Authentication
+
+Select:
+
+**Self managed**
+
+Enter the database credentials manually.
+
+Example:
+
+```text
+Username: chatappadmin
+Password: <STRONG_DATABASE_PASSWORD>
+```
+
+Use a strong password and keep it secure.
+
+### Encryption
+
+- **Encryption:** Enabled
+
+### Backup
+
+- **Backup retention period:** `1 day`
+
+<img src="images/documentdb-cluster.png" width="500">
+
+> The service-linked IAM role required by Amazon DocumentDB is an AWS service requirement and is separate from database authentication. No separate service-linked-role setup is required in this guide.
+
+---
+
+## 1.4 AWS Secrets Manager
+
+AWS Secrets Manager is used to securely store the DocumentDB connection string and JWT secret.
+
+Go to:
+
+**AWS Console → Secrets Manager → Store a new secret**
+
+Select:
+
+**Other type of secret → Plaintext**
+
+### Generate JWT Secret
+
+Run the following command on the **CI server**:
+
+```bash
+openssl rand -base64 32
+```
+
+Copy the generated value and use it as the `JWT_SECRET`.
+
+### Secret Values
+
+After the DocumentDB cluster is created, get the **Cluster endpoint** from:
+
+**AWS Console → DocumentDB → Clusters → chat-app-db → Connectivity & security**
+
+Create the MongoDB-compatible DocumentDB connection string:
+
+```text
+mongodb://<USERNAME>:<PASSWORD>@<DOCUMENTDB-ENDPOINT>:27017/chatApp?tls=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false
+```
+
+Store the following values:
+
+```json
+{
+  "MONGODB_URI": "mongodb://<USERNAME>:<PASSWORD>@<DOCUMENTDB-ENDPOINT>:27017/chatApp?tls=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false",
+  "JWT_SECRET": "<GENERATED_JWT_SECRET>"
+}
+```
+
+### Secret Name
+
+```text
+chatapp/backend
+```
+
+Then select:
+
+**Next → Next → Review → Store**
+
+<img src="images/secrets-manager-backend.png" width="500">
+
+> The DocumentDB username and password are self-managed. The database password is stored securely inside AWS Secrets Manager as part of the application connection string.
 
 ---
 
@@ -132,6 +284,10 @@ The CD server is used for Continuous Deployment and deployment-related operation
 
 [Argo CD Installation Guide](https://github.com/NithinGowda46/installation_guide/blob/a05684a5e9f54c29c06bbf0135a8ac3900ef1c1f/5.agrocd/.installation_amazonlinux.md)
 
+### MongoDB Shell
+
+[MongoDB Shell Installation Guide](<MONGOSH_INSTALLATION_GUIDE_LINK>)
+
 ---
 
 ## 3.2 Configure EKS Access
@@ -147,3 +303,46 @@ aws eks update-kubeconfig \
 ```
 
 ---
+
+## 3.3 Configure Amazon DocumentDB
+
+Configure the CD server to connect to the private Amazon DocumentDB cluster.
+
+### Download DocumentDB TLS Certificate
+
+```bash
+wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+```
+
+Verify:
+
+```bash
+ls -l global-bundle.pem
+```
+
+### Get DocumentDB Endpoint
+
+Go to:
+
+**AWS Console → DocumentDB → Clusters → chat-app-db → Connectivity & security**
+
+Copy the **Cluster endpoint**.
+
+### Connect to DocumentDB
+
+Use the username and password that were configured during DocumentDB cluster creation.
+
+Run:
+
+```bash
+mongosh \
+  --tls \
+  --host <DOCUMENTDB-ENDPOINT>:27017 \
+  --tlsCAFile global-bundle.pem \
+  --username <USERNAME> \
+  --password
+```
+
+When prompted, enter the DocumentDB password.
+
+A successful connection confirms that the CD server can reach the private Amazon DocumentDB cluster.
