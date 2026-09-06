@@ -13,45 +13,36 @@ Key:   kubernetes.io/role/elb
 Value: 1
 ```
 
-Verify the subnet tags in:
+---
 
-**AWS Console → VPC → Subnets → Tags**
+## 2. Add Required EKS Add-ons
+
+From the AWS Console:
+
+**AWS Console → EKS → Clusters → `chat-cluster` → Add-ons → Get more add-ons**
+
+Add the required add-ons:
+
+- **Metrics Server** — provides CPU and memory metrics required by the HPA.
+- **AWS Secrets Manager and Configuration Provider (ASCP)** — allows Kubernetes workloads to retrieve secrets from AWS Secrets Manager through the Secrets Store CSI integration.
+- **Amazon EKS Pod Identity Agent** — provides AWS credentials to pods using EKS Pod Identity associations.
 
 ---
 
-## 2. AWS Secrets Store CSI Driver
+## 3. AWS Secrets Store CSI Driver
 
-Install the **Secrets Store CSI Driver** and the **AWS Secrets Manager provider/add-on** on the EKS cluster.
+Install the **Secrets Store CSI Driver** and the **AWS Secrets Manager provider** on the EKS cluster.
 
-Verify:
-
-```bash
-kubectl get pods -n aws-secrets-manager
-```
-
-Verify the CRD:
-
-```bash
-kubectl get crd secretproviderclasses.secrets-store.csi.x-k8s.io
-```
-
-The driver and AWS provider must be running before the backend Deployment is synchronized.
+These components allow the Kubernetes `SecretProviderClass` to retrieve secrets from AWS Secrets Manager.
 
 ---
 
-## 3. Secret Synchronization RBAC
+## 4. Secret Synchronization RBAC
 
 Apply the RBAC required for synchronizing external secrets into Kubernetes Secrets:
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/v1.6.0/deploy/rbac-secretprovidersyncing.yaml
-```
-
-Verify:
-
-```bash
-kubectl get clusterrole secretprovidersyncing-role
-kubectl get clusterrolebinding secretprovidersyncing-rolebinding
 ```
 
 The backend Deployment expects the synchronized Kubernetes Secret:
@@ -62,27 +53,31 @@ backend-secret
 
 ---
 
-## 4. Backend Pod Identity Association
+## 5. Backend Pod Identity Association
 
-Create the EKS Pod Identity association for the backend:
+Create the EKS Pod Identity association for the backend.
+
+In the AWS Console:
+
+**EKS → Clusters → `chat-cluster` → Access → Pod Identity associations → Create**
+
+Use:
 
 ```text
 Namespace:      chatapp
-ServiceAccount: backend-sa
-IAM Role:       ChatAppBackendSecretsRole
+Service account: backend-sa
+IAM role:       ChatAppBackendSecretsRole
 ```
 
-The required ServiceAccount is defined in the CD repository as:
+The ServiceAccount is defined in the CD repository as:
 
 ```text
 k8s/serviceaccount.yaml
 ```
 
-Verify the association in:
+The IAM role must have permission to read the backend secret from AWS Secrets Manager.
 
-**AWS Console → EKS → Clusters → chat-cluster → Pod Identity associations**
-
-The resulting flow is:
+The complete flow is:
 
 ```text
 Backend Pod
@@ -96,152 +91,98 @@ ChatAppBackendSecretsRole
 AWS Secrets Manager
 ```
 
----
+The backend `SecretProviderClass` uses Pod Identity with:
 
-## 5. Verify AWS Secret Access
+```yaml
+usePodIdentity: "true"
+```
 
-Confirm that the secret used by the backend exists in AWS Secrets Manager:
+The secret used by the application is:
 
 ```text
 chatapp/backend
 ```
 
-It must contain:
+It contains:
 
 ```text
 MONGODB_URI
 JWT_SECRET
 ```
 
-Do not put the actual secret values in GitHub.
-
-The backend `SecretProviderClass` will retrieve these values when the pod starts.
+The actual secret values must not be stored in GitHub.
 
 ---
 
-## 6. Verify HPA Metrics
+## 6. DNS Configuration
 
-The backend HPA requires resource metrics.
+After the Application Load Balancer is created by the Kubernetes Ingress, configure DNS so the application can be accessed using the required domain name.
 
-Verify:
+Create a DNS record in **Amazon Route 53** pointing the application domain to the ALB.
 
-```bash
-kubectl top pods -n chatapp
-```
+For an ALB, use an **Alias record** rather than manually entering the ALB IP address because the ALB IP addresses can change.
 
-If metrics are unavailable, install/configure a compatible metrics provider before relying on the HPA.
-
----
-
-## 7. Verify EKS ALB Readiness
-
-EKS Auto Mode provides the AWS load-balancing capability required by the application's ALB Ingress.
-
-The application Ingress is configured as:
+Example:
 
 ```text
-Scheme: internet-facing
+Record name:  chat.example.com
+Record type:  A
+Alias:        Yes
+Target:       Application Load Balancer
 ```
 
-Traffic will be routed as:
+If an internal/private DNS name is required for resources in the VPC, create the corresponding private Route 53 record and point it to the required private resource/IP.
+
+For example, a private record can resolve to an internal address such as:
 
 ```text
-/api → backend-service:5001
-/    → frontend-service:80
+10.18.x.x
 ```
 
-No public IP is required on the application pods or Services because the ALB is the external entry point.
+Use the actual private IP address assigned to the required resource; do not use a hard-coded IP if the resource's private IP can change.
 
 ---
 
-## 8. Verify CD Repository
+## 7. Tag the Public IP / Elastic IP
 
-Confirm that the latest Kubernetes and Argo CD configuration is pushed to:
+If an **Elastic IP** is used for a public-facing AWS resource such as the NAT Gateway, add a meaningful Name tag so the resource can be easily identified.
 
-```text
-Project2-chatapp-CD
-```
+In the AWS Console:
 
-Required directories:
+**EC2 → Network & Security → Elastic IPs → Select Elastic IP → Tags → Manage tags**
 
-```text
-k8s/
-argocd/
-```
-
-The `k8s/` directory must contain the current application manifests, and the `argocd/` directory must contain:
+Example:
 
 ```text
-project.yaml
-application.yaml
+Key:   Name
+Value: chatapp-nat-eip
 ```
+
+Use an appropriate tag for the actual resource if the public IP belongs to another component.
 
 ---
 
-## 9. Argo CD Repository Access
-
-The Argo CD Application points to the GitHub CD repository and the `k8s/` directory.
-
-For the current public repository, no GitHub repository credential is required.
-
-Before creating the Argo CD Application, verify from the CD server that the repository is reachable:
-
-```bash
-git ls-remote https://github.com/NithinGowda46/Project2-chatapp-CD.git
-```
-
----
-
-## 10. Final Verification Before Argo CD
-
-Run the following checks from the CD server:
-
-### EKS access
-
-```bash
-kubectl get nodes
-```
-
-### Secrets Store CSI Driver
-
-```bash
-kubectl get pods -n aws-secrets-manager
-```
-
-### SecretProviderClass CRD
-
-```bash
-kubectl get crd secretproviderclasses.secrets-store.csi.x-k8s.io
-```
-
-### HPA metrics
-
-```bash
-kubectl top pods -n chatapp
-```
-
-### GitHub repository access
-
-```bash
-git ls-remote https://github.com/NithinGowda46/Project2-chatapp-CD.git
-```
-
----
-
-## 11. Deployment Order
+## 8. Deployment Order
 
 After `CI-setup.md` and `CD-setup.md` are complete, follow this order:
 
 ```text
 1. Configure EKS public subnet tags
         ↓
-2. Install Secrets Store CSI Driver + AWS provider
+2. Add Metrics Server, AWS Secrets Manager and Configuration Provider,
+   and EKS Pod Identity Agent add-ons
         ↓
-3. Apply secret synchronization RBAC
+3. Install Secrets Store CSI Driver + AWS provider
         ↓
-4. Configure EKS Pod Identity association
+4. Apply secret synchronization RBAC
         ↓
-5. Argo CD deployment
+5. Configure EKS Pod Identity association
+        ↓
+6. Configure DNS in Route 53
+        ↓
+7. Tag the required public/Elastic IP
+        ↓
+8. Argo CD deployment
 ```
 
 Once these additional prerequisites are complete, proceed with the **Argo CD deployment**.
