@@ -404,3 +404,69 @@ The complete deployment prerequisites are available in the following document:
 [Deployment Prerequisites](https://github.com/NithinGowda46/All_projects_details/blob/main/Project2/deployment_prerequisites.md)
 
 After completing all the prerequisites, proceed to the Argo CD deployment steps.
+
+---
+
+# 🔴 6. EKS Public Subnet Tags
+
+Because the application uses an **internet-facing AWS Application Load Balancer**, tag the public subnets used by the EKS cluster.
+
+Go to:
+
+**AWS Console → VPC → Subnets → Select Public Subnet → Tags → Manage tags**
+
+Add the following tag:
+
+```text
+Key:    kubernetes.io/role/elb
+Value:  1
+```
+
+Apply this tag to each public subnet that can be used by the EKS Application Load Balancer.
+
+---
+
+# 🔴 7. Argo CD Deployment
+
+After completing all deployment prerequisites, clone the CD repository on the CD server.
+
+## 7.1 Clone CD Repository
+
+Run from the CD server:
+
+```bash
+git clone https://github.com/NithinGowda46/Project2-chatapp-CD.git
+```
+
+Navigate into the repository:
+
+```bash
+cd Project2-chatapp-CD
+```
+
+---
+
+## 7.2 Apply Argo CD Project
+
+Apply the Argo CD Project configuration:
+
+```bash
+kubectl apply -f argocd/project.yaml
+```
+
+The Argo CD Project is created in the `argocd` namespace.
+
+---
+
+## 7.3 Apply Argo CD Application
+
+Apply the Argo CD Application configuration:
+
+```bash
+kubectl apply -f argocd/application.yaml
+```
+
+The Argo CD Application connects Argo CD to the GitHub CD repository and monitors the Kubernetes manifests in the `k8s` directory.
+
+
+
