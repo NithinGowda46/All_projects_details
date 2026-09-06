@@ -393,3 +393,14 @@ The directory contains the following configuration files:
 - `project.yaml` — Argo CD Project configuration
 - `application.yaml` — Argo CD Application configuration
 
+---
+
+# 🔴 5. Deployment Prerequisites
+
+Before applying the Argo CD deployment files, all required AWS, Kubernetes, IAM, Secrets Manager, EKS Pod Identity, Secrets Store CSI Driver, ALB, ECR, and database configurations must be completed.
+
+The complete deployment prerequisites are available in the following document:
+
+[Deployment Prerequisites](https://github.com/NithinGowda46/All_projects_details/blob/main/Project2/deployment_prerequisites.md)
+
+After completing all the prerequisites, proceed to the Argo CD deployment steps.
