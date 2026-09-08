@@ -225,3 +225,10 @@ It also demonstrates the separation of application delivery from infrastructure 
 - Never commit real passwords, private keys, access keys, or sensitive connection strings.
 - Treat the Jenkins `8080` public exposure as a learning/practice configuration, not a production recommendation.
 - HPA is part of the implementation; VPA is intentionally not included.
+
+
+👨‍💻 Author
+
+Nithin Gowda
+
+This project demonstrates an end-to-end DevOps workflow covering Docker, Jenkins CI, Amazon ECR, Kubernetes, Amazon EKS, GitOps, Argo CD, Gunicorn, and WSGI, along with AWS networking, secrets management, monitoring, security, and production delivery.
